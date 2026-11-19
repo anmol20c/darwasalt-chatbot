@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DarGlobal & Wasalt Assistant</title>
+<style>
+  body{font-family:system-ui,sans-serif;margin:0;background:#f5f6f8;color:#1a1a1a}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;display:flex;flex-direction:column;height:100vh;box-sizing:border-box}
+  h1{font-size:1.2rem;margin:0 0 8px}
+  #log{flex:1;overflow:auto;background:#fff;border-radius:10px;padding:12px;border:1px solid #ddd}
+  .m{margin:8px 0;padding:8px 12px;border-radius:10px;max-width:85%;white-space:pre-wrap}
+  .u{background:#1d4ed8;color:#fff;margin-left:auto}
+  .b{background:#eef0f3}
+  .s{font-size:.75rem;color:#666;margin-top:4px}
+  form{display:flex;gap:8px;margin-top:10px}
+  input{flex:1;padding:10px;border-radius:8px;border:1px solid #ccc;font-size:1rem}
+  button{padding:10px 16px;border:0;border-radius:8px;background:#1d4ed8;color:#fff;font-size:1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DarGlobal &amp; Wasalt Assistant</h1>
+  <div id="log"><div class="m b">Hi! Ask me about DarGlobal's projects or Wasalt's platform and services.</div></div>
+  <form id="f"><input id="q" placeholder="e.g. What is Trump Tower Jeddah?" autocomplete="off"><button>Send</button></form>
+</div>
+<script>
+const log=document.getElementById('log'),f=document.getElementById('f'),q=document.getElementById('q');
+let history=[];
+function add(t,c,s){const d=document.createElement('div');d.className='m '+c;d.textContent=t;
+  if(s&&s.length){const e=document.createElement('div');e.className='s';e.textContent='Sources: '+s.join(', ');d.appendChild(e)}
+  log.appendChild(d);log.scrollTop=log.scrollHeight;return d}
+f.onsubmit=async e=>{e.preventDefault();const m=q.value.trim();if(!m)return;q.value='';add(m,'u');
+  const w=add('Thinking…','b');
+  try{const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:m,history})});
+    const raw=await r.text();let j;
+    try{j=JSON.parse(raw)}catch(_){throw new Error('Server returned a non-JSON response (HTTP '+r.status+'). The backend may still be starting or is not running the chatbot server.')}
+    if(!r.ok)throw new Error(j.detail||r.status);
+    w.remove();add(j.answer,'b',j.sources);history.push({role:'user',content:m},{role:'assistant',content:j.answer});
+  }catch(err){w.textContent='Error: '+err.message}};
+</script>
+</body>
+</html>
